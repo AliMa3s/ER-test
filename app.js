@@ -660,15 +660,17 @@
       const card = document.createElement('button');
       card.className = 'card city-card';
       card.setAttribute('data-city-id', city.id);
+      const cityName = city.name[state.lang];
       card.innerHTML = `
-        <div class="card-top">
-          <h3 class="city-name">${escapeHtml(city.name[state.lang])}</h3>
-          <span class="region-pill ${city.region}">${escapeHtml(regionLabel(city.region))}</span>
+        <div class="city-accent ${city.region}"></div>
+        <div class="city-badge ${city.region}">${escapeHtml(cityInitial(cityName))}</div>
+        <div class="city-body">
+          <h3 class="city-name">${escapeHtml(cityName)}</h3>
+          <p class="city-meta">${escapeHtml(city.province[state.lang])}</p>
         </div>
-        <p class="city-meta">${escapeHtml(city.province[state.lang])}</p>
         <div class="card-foot">
-          <span>${escapeHtml(t().centerCount(city.centers.length))}</span>
-          <span class="chev">›</span>
+          <span class="region-pill ${city.region}">${escapeHtml(regionLabel(city.region))}</span>
+          <span class="center-count-pill">${escapeHtml(t().centerCount(city.centers.length))}</span>
         </div>
       `;
       card.addEventListener('click', () => navigate('city', { cityId: city.id }));
@@ -785,6 +787,10 @@
     </svg>`;
   }
 
+  function cityInitial(name) {
+    const cleaned = name.replace(/[^a-zA-ZÀ-ÿ]/g, '');
+    return cleaned ? cleaned[0].toUpperCase() : '·';
+  }
   function initials(name) {
     const parts = name.replace(/[^a-zA-ZÀ-ÿ\s-]/g, '').trim().split(/\s+/);
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();

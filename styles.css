@@ -249,55 +249,94 @@ input { font-family: inherit; }
 /* ===== Grid ===== */
 .grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 @media (min-width: 600px) {
-  .grid { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid { grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 }
 @media (min-width: 960px) {
-  .grid { grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+}
+@media (min-width: 1200px) {
+  .grid { grid-template-columns: repeat(5, 1fr); }
 }
 
-/* ===== Cards ===== */
+/* ===== City tile cards ===== */
 .card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 16px;
+  border-radius: var(--radius-lg);
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   text-align: left;
   width: 100%;
-  transition: transform 0.08s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  overflow: hidden;
+  transition: transform 0.08s ease, border-color 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: var(--shadow-sm);
 }
-.card:hover { border-color: var(--ink); box-shadow: var(--shadow-md); }
-.card:active { transform: scale(0.99); }
+.card:hover { border-color: var(--ink); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.card:active { transform: translateY(0) scale(0.99); }
 
-.city-card .card-top {
+.city-accent {
+  height: 4px;
+  width: 100%;
+  background: var(--accent-yellow);
+}
+.city-accent.brussels { background: var(--accent-red); }
+.city-accent.wallonia { background: var(--ink); }
+
+.city-badge {
+  width: 42px;
+  height: 42px;
+  margin: 14px 14px 0;
+  border-radius: 12px;
+  background: var(--accent-yellow-soft);
+  color: #5e4a00;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  border: 1px solid #f1d77b;
+}
+.city-badge.brussels { background: #ffe9e9; color: #6b1a1a; border-color: #f3b8b8; }
+.city-badge.wallonia { background: #111; color: #fff; border-color: #111; }
+
+.city-body {
+  padding: 10px 14px 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 .city-name {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .city-meta {
   font-size: 12px;
   color: var(--muted);
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .region-pill {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 3px 8px;
+  padding: 3px 7px;
   border-radius: 999px;
   background: var(--accent-yellow-soft);
   color: #5e4a00;
@@ -305,20 +344,25 @@ input { font-family: inherit; }
 }
 .region-pill.brussels { background: #ffe9e9; color: #6b1a1a; border-color: #f3b8b8; }
 .region-pill.wallonia { background: #fdecec; color: #6b1a1a; border-color: #f3b8b8; }
+.center-count-pill {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
 .card-foot {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  color: var(--muted);
-  border-top: 1px solid var(--line);
-  padding-top: 10px;
-  margin-top: 2px;
+  gap: 8px;
+  padding: 0 14px 12px;
+  margin-top: 0;
+  border-top: none;
 }
-.chev {
-  font-size: 16px;
-  color: var(--ink);
-  font-weight: 700;
+@media (min-width: 600px) {
+  .city-name { font-size: 16px; }
+  .city-badge { width: 48px; height: 48px; font-size: 22px; margin: 16px 16px 0; }
+  .city-body { padding: 12px 16px 12px; }
+  .card-foot { padding: 0 16px 14px; }
 }
 
 /* ===== List (centers) ===== */
@@ -451,7 +495,11 @@ input { font-family: inherit; }
   background: linear-gradient(135deg, var(--ink) 0%, #333 100%);
   overflow: hidden;
 }
-.route-image.has-photo { height: 180px; background: #f0ece4; }
+.route-image.has-photo {
+  height: auto;
+  aspect-ratio: 4 / 3;
+  background: #eef1f4;
+}
 .route-image svg {
   position: absolute;
   inset: 0;
@@ -463,8 +511,9 @@ input { font-family: inherit; }
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  padding: 6px;
 }
 .route-label {
   position: absolute;
