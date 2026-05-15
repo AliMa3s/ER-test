@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#111111" />
+  <title>ExamRoute Belgium</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Language selection screen -->
+    <section id="screen-language" class="screen active">
+      <div class="lang-wrap">
+        <div class="brand-mark">
+          <div class="brand-flag" aria-hidden="true">
+            <span class="flag-black"></span>
+            <span class="flag-yellow"></span>
+            <span class="flag-red"></span>
+          </div>
+          <h1 class="brand-title">ExamRoute</h1>
+          <p class="brand-sub">Belgium</p>
+        </div>
+        <h2 class="lang-title" data-i18n="chooseLanguage">Choose your language</h2>
+        <div class="lang-options">
+          <button class="lang-btn" data-lang="nl">
+            <span class="lang-code">NL</span>
+            <span class="lang-name">Nederlands</span>
+          </button>
+          <button class="lang-btn" data-lang="en">
+            <span class="lang-code">EN</span>
+            <span class="lang-name">English</span>
+          </button>
+          <button class="lang-btn" data-lang="fr">
+            <span class="lang-code">FR</span>
+            <span class="lang-name">Français</span>
+          </button>
+        </div>
+        <p class="lang-foot" data-i18n="disclaimerShort">Practice guidance only. Confirm official exam details with the exam center.</p>
+      </div>
+    </section>
+
+    <!-- Home screen -->
+    <section id="screen-home" class="screen">
+      <header class="app-header compact">
+        <div class="header-row">
+          <div class="header-brand">
+            <div class="brand-flag small" aria-hidden="true">
+              <span class="flag-black"></span>
+              <span class="flag-yellow"></span>
+              <span class="flag-red"></span>
+            </div>
+            <div>
+              <h1 class="header-title">ExamRoute</h1>
+              <p class="header-sub" data-i18n="tagline">Belgian practice routes</p>
+            </div>
+          </div>
+          <button class="lang-toggle" id="langToggle" aria-label="Change language">
+            <span id="currentLang">EN</span>
+          </button>
+        </div>
+
+        <div class="search-bar">
+          <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 1 1-4.9 14.32l-3.4 3.39-1.41-1.41 3.39-3.4A8 8 0 0 1 10 2zm0 2a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/></svg>
+          <input type="search" id="searchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search city, region, center, address" autocomplete="off" />
+        </div>
+
+        <div class="filters" id="regionFilters">
+          <button class="filter-btn active" data-region="all" data-i18n="filterAll">All</button>
+          <button class="filter-btn" data-region="brussels" data-i18n="filterBrussels">Brussels</button>
+          <button class="filter-btn" data-region="flanders" data-i18n="filterFlanders">Flanders</button>
+          <button class="filter-btn" data-region="wallonia" data-i18n="filterWallonia">Wallonia</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="section-head">
+          <h2 class="section-title" data-i18n="cities">Cities</h2>
+          <span class="section-count" id="cityCount">0</span>
+        </div>
+        <div class="grid" id="cityGrid"></div>
+        <p class="empty-state" id="cityEmpty" hidden data-i18n="noResults">No matching cities found.</p>
+        <p class="disclaimer" data-i18n="disclaimerShort">Practice guidance only. Confirm official exam details with the exam center.</p>
+      </main>
+    </section>
+
+    <!-- City detail screen -->
+    <section id="screen-city" class="screen">
+      <header class="detail-header">
+        <button class="back-btn" data-back="home">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+          <span data-i18n="back">Back</span>
+        </button>
+        <div class="detail-titles">
+          <h1 id="cityName" class="detail-title"></h1>
+          <p id="cityMeta" class="detail-sub"></p>
+        </div>
+      </header>
+      <main class="content">
+        <div class="section-head">
+          <h2 class="section-title" data-i18n="centers">Exam centers</h2>
+        </div>
+        <div class="list" id="centerList"></div>
+      </main>
+    </section>
+
+    <!-- Center detail screen -->
+    <section id="screen-center" class="screen">
+      <header class="detail-header">
+        <button class="back-btn" data-back="city">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+          <span data-i18n="back">Back</span>
+        </button>
+        <div class="detail-titles">
+          <h1 id="centerName" class="detail-title"></h1>
+          <p id="centerMeta" class="detail-sub"></p>
+        </div>
+      </header>
+      <main class="content">
+        <div class="center-info" id="centerInfo"></div>
+        <div class="section-head">
+          <h2 class="section-title" data-i18n="routes">Practice routes</h2>
+        </div>
+        <div class="routes" id="routeList"></div>
+        <p class="disclaimer" data-i18n="disclaimerLong">Practice guidance only. These are suggested practice routes and not official exam routes. Always confirm details with the exam center.</p>
+      </main>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
