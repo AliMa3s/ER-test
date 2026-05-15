@@ -59,6 +59,16 @@
   // ===================== Helpers =====================
   function tri(nl, en, fr) { return { nl, en, fr }; }
   function gmaps(q) { return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q); }
+  function gmapsPath(path, cityName) {
+    if (!path || path.length < 2) return null;
+    const suffix = ', ' + cityName + ', Belgium';
+    const origin = encodeURIComponent(path[0] + suffix);
+    const destination = encodeURIComponent(path[path.length - 1] + suffix);
+    const waypoints = path.slice(1, -1).map(p => encodeURIComponent(p + suffix)).join('|');
+    let url = 'https://www.google.com/maps/dir/?api=1&origin=' + origin + '&destination=' + destination + '&travelmode=driving';
+    if (waypoints) url += '&waypoints=' + waypoints;
+    return url;
+  }
   function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
 
   // ===================== Route flavor system =====================
@@ -363,6 +373,29 @@
     'cuesmes-1': 'industrial-walloon'
   };
 
+  // Per-center route overrides. Use this when a center has a known
+  // street-by-street practice itinerary worth showing exactly.
+  const ROUTE_OVERRIDES = {
+    'gent-sdw': {
+      city: 'Gent',
+      A: {
+        path: ['Poortakkerstraat', 'Klenkouterken', 'Steenaardestraat', 'Beukenlaan', 'Stormvogelstraat', 'B402', 'Poortakkerstraat'],
+        distanceKm: 11, durationMin: 22,
+        imageUrl: 'assets/GentrouteA.png'
+      },
+      B: {
+        path: ['Poortakkerstraat', 'Louis Blerotlaan', 'R4', 'Renbaanstraat', 'Rijsenbergstraat', 'Aaigemstraat', 'Koningin Fabiolalaan', 'Sint-Denijslaan', 'Poortakkerstraat'],
+        distanceKm: 46, durationMin: 61,
+        imageUrl: 'assets/GentrouteB.png'
+      },
+      C: {
+        path: ['Poortakkerstraat', 'Bijenstraat', 'Twaalfapostelenstraat', 'Kortrijksesteenweg', 'Zieklien', 'Voskenslaan', 'Valentin Vaerwyckweg', 'Poortakkerstraat'],
+        distanceKm: 13, durationMin: 26,
+        imageUrl: 'assets/GentrouteC.png'
+      }
+    }
+  };
+
   // Deterministic per-center variance so two centers with the same flavor
   // still show different stats.
   function variance(centerId, route, base, spread) {
@@ -384,18 +417,26 @@
       B: { dist: 6, dur: 25, distSpread: 2, durSpread: 5 },
       C: { dist: 24, dur: 45, distSpread: 5, durSpread: 9 }
     };
-    return ['A', 'B', 'C'].map(letter => ({
-      id: centerId + '-' + letter.toLowerCase(),
-      label: tri('Route ' + letter, 'Route ' + letter, 'Itinéraire ' + letter),
-      focus: f[letter].focus,
-      difficulty: diffMap[letter],
-      distanceKm: variance(centerId, letter, base[letter].dist, base[letter].distSpread),
-      durationMin: variance(centerId, letter, base[letter].dur, base[letter].durSpread),
-      image: letter,
-      tags: f[letter].tags,
-      notes: f[letter].notes,
-      googleMapsUrl: gmaps(address + ', ' + cityName)
-    }));
+    const overrides = ROUTE_OVERRIDES[centerId] || {};
+    return ['A', 'B', 'C'].map(letter => {
+      const o = overrides[letter] || {};
+      const path = o.path || null;
+      const mapsUrl = (path && gmapsPath(path, overrides.city || cityName)) || gmaps(address + ', ' + cityName);
+      return {
+        id: centerId + '-' + letter.toLowerCase(),
+        label: tri('Route ' + letter, 'Route ' + letter, 'Itinéraire ' + letter),
+        focus: f[letter].focus,
+        difficulty: diffMap[letter],
+        distanceKm: o.distanceKm != null ? o.distanceKm : variance(centerId, letter, base[letter].dist, base[letter].distSpread),
+        durationMin: o.durationMin != null ? o.durationMin : variance(centerId, letter, base[letter].dur, base[letter].durSpread),
+        image: letter,
+        imageUrl: o.imageUrl || null,
+        tags: f[letter].tags,
+        notes: f[letter].notes,
+        path: path,
+        googleMapsUrl: mapsUrl
+      };
+    });
   }
 
   function makeCenter(id, nameNl, nameEn, nameFr, operator, address, phone) {
@@ -680,8 +721,8 @@
       card.className = 'route-card';
       const dc = difficultyClass(route.difficulty);
       card.innerHTML = `
-        <div class="route-image">
-          ${routeIllustration(route.image)}
+        <div class="route-image${route.imageUrl ? ' has-photo' : ''}">
+          ${route.imageUrl ? `<img src="${escapeHtml(route.imageUrl)}" alt="${escapeHtml(route.label[state.lang])}" loading="lazy" />` : routeIllustration(route.image)}
           <span class="route-label">${escapeHtml(route.label[state.lang])}</span>
           <span class="route-difficulty ${dc}">${escapeHtml(route.difficulty[state.lang])}</span>
         </div>
@@ -695,6 +736,7 @@
           <div class="route-tags">
             ${route.tags.map(tag => `<span class="route-tag">${escapeHtml(tag[state.lang])}</span>`).join('')}
           </div>
+          ${route.path ? `<ol class="route-path">${route.path.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ol>` : ''}
           <div class="route-notes">
             <ul>${route.notes.map(n => `<li>${escapeHtml(n[state.lang])}</li>`).join('')}</ul>
           </div>

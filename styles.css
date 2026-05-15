@@ -451,11 +451,20 @@ input { font-family: inherit; }
   background: linear-gradient(135deg, var(--ink) 0%, #333 100%);
   overflow: hidden;
 }
+.route-image.has-photo { height: 180px; background: #f0ece4; }
 .route-image svg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+}
+.route-image img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .route-label {
   position: absolute;
@@ -522,6 +531,52 @@ input { font-family: inherit; }
   border-radius: 999px;
   font-weight: 500;
 }
+.route-path {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.route-path li {
+  position: relative;
+  padding-left: 26px;
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.35;
+  counter-increment: step;
+}
+.route-path li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 18px;
+  height: 18px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.route-path li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 20px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--line-strong);
+}
+
 .route-notes {
   font-size: 13px;
   color: var(--ink-2);
