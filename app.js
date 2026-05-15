@@ -411,7 +411,7 @@
       if (state.region !== 'all' && c.region !== state.region) return false;
       if (!matchesQuery(c)) return false;
       return true;
-    });
+    }).slice().sort((a, b) => a.name[state.lang].localeCompare(b.name[state.lang], state.lang, { sensitivity: 'base' }));
   }
 
   function renderHome() {
