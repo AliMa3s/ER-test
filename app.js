@@ -20,7 +20,13 @@
       duration: 'min', distance: 'km', focus: 'Focus', notes: 'Aandachtspunten',
       cityCount: (n) => `${n} stad${n === 1 ? '' : 'en'}`,
       regionFlanders: 'Vlaanderen', regionWallonia: 'Wallonië', regionBrussels: 'Brussel',
-      centerCount: (n) => `${n} centrum${n === 1 ? '' : 's'}`
+      centerCount: (n) => `${n} centrum${n === 1 ? '' : 's'}`,
+      aboutTitle: 'Over ExamRoute',
+      aboutVersion: 'Versie 1.0',
+      aboutText: 'ExamRoute helpt Belgische leerling-bestuurders bij het verkennen van oefenroutes rond officiële examencentra in Vlaanderen, Brussel en Wallonië.',
+      aboutDisclaimer: 'Enkel ter oefening. Dit zijn voorgestelde oefenroutes, geen officiële examenroutes. Bevestig altijd de details bij het examencentrum.',
+      aboutSupport: 'Steun dit project',
+      aboutClose: 'Sluiten'
     },
     en: {
       chooseLanguage: 'Choose your language',
@@ -36,7 +42,13 @@
       duration: 'min', distance: 'km', focus: 'Focus', notes: 'Key points',
       cityCount: (n) => `${n} ${n === 1 ? 'city' : 'cities'}`,
       regionFlanders: 'Flanders', regionWallonia: 'Wallonia', regionBrussels: 'Brussels',
-      centerCount: (n) => `${n} ${n === 1 ? 'center' : 'centers'}`
+      centerCount: (n) => `${n} ${n === 1 ? 'center' : 'centers'}`,
+      aboutTitle: 'About ExamRoute',
+      aboutVersion: 'Version 1.0',
+      aboutText: 'ExamRoute helps Belgian learner drivers explore practice routes around official exam centers — across Flanders, Brussels and Wallonia.',
+      aboutDisclaimer: 'Practice guidance only. These are suggested practice routes and not official exam routes. Always confirm details with the exam center.',
+      aboutSupport: 'Support this project',
+      aboutClose: 'Close'
     },
     fr: {
       chooseLanguage: 'Choisissez votre langue',
@@ -52,7 +64,13 @@
       duration: 'min', distance: 'km', focus: 'Objectif', notes: 'Points clés',
       cityCount: (n) => `${n} ville${n === 1 ? '' : 's'}`,
       regionFlanders: 'Flandre', regionWallonia: 'Wallonie', regionBrussels: 'Bruxelles',
-      centerCount: (n) => `${n} centre${n === 1 ? '' : 's'}`
+      centerCount: (n) => `${n} centre${n === 1 ? '' : 's'}`,
+      aboutTitle: 'À propos d\'ExamRoute',
+      aboutVersion: 'Version 1.0',
+      aboutText: 'ExamRoute aide les apprentis conducteurs belges à explorer des itinéraires de pratique autour des centres d\'examen officiels — en Flandre, à Bruxelles et en Wallonie.',
+      aboutDisclaimer: 'À titre indicatif uniquement. Ce sont des itinéraires de pratique suggérés et non des itinéraires officiels. Confirmez toujours les détails avec le centre d\'examen.',
+      aboutSupport: 'Soutenir ce projet',
+      aboutClose: 'Fermer'
     }
   };
 
@@ -61,13 +79,13 @@
   function gmaps(q) { return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q); }
   function gmapsPath(path, cityName) {
     if (!path || path.length < 2) return null;
-    const suffix = ', ' + cityName + ', Belgium';
-    const origin = encodeURIComponent(path[0] + suffix);
-    const destination = encodeURIComponent(path[path.length - 1] + suffix);
-    const waypoints = path.slice(1, -1).map(p => encodeURIComponent(p + suffix)).join('|');
-    let url = 'https://www.google.com/maps/dir/?api=1&origin=' + origin + '&destination=' + destination + '&travelmode=driving';
-    if (waypoints) url += '&waypoints=' + waypoints;
-    return url;
+    // Path-style URL: /maps/dir/A/B/C. More tolerant of partial place
+    // names (road codes, small streets) than the ?api=1 + waypoints
+    // form, and triggers the native Maps app on Android WebView.
+    const segments = path.map(p =>
+      encodeURIComponent(p + ', ' + cityName).replace(/%20/g, '+')
+    );
+    return 'https://www.google.com/maps/dir/' + segments.join('/');
   }
   function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
 
@@ -620,7 +638,24 @@
     const map = { language: 'screen-language', home: 'screen-home', city: 'screen-city', center: 'screen-center' };
     const el = document.getElementById(map[name]);
     if (el) el.classList.add('active');
+    const fab = $('#aboutFab');
+    if (fab) fab.hidden = (name === 'language');
     window.scrollTo(0, 0);
+  }
+
+  function openAbout() {
+    const m = $('#aboutModal');
+    if (!m) return;
+    m.hidden = false;
+    requestAnimationFrame(() => m.classList.add('open'));
+    document.body.style.overflow = 'hidden';
+  }
+  function closeAbout() {
+    const m = $('#aboutModal');
+    if (!m) return;
+    m.classList.remove('open');
+    setTimeout(() => { m.hidden = true; }, 180);
+    document.body.style.overflow = '';
   }
 
   // ===================== Rendering =====================
@@ -656,14 +691,17 @@
     const count = $('#cityCount');
     const list = getFilteredCities();
     grid.innerHTML = '';
-    list.forEach(city => {
+    list.forEach((city, index) => {
       const card = document.createElement('button');
       card.className = 'card city-card';
       card.setAttribute('data-city-id', city.id);
       const cityName = city.name[state.lang];
+      const p = paletteFor(city.id, index);
+      const accentStyle = `background:${p.accent}`;
+      const badgeStyle = `background:${p.bg};color:${p.text};border-color:${p.border}`;
       card.innerHTML = `
-        <div class="city-accent ${city.region}"></div>
-        <div class="city-badge ${city.region}">${escapeHtml(cityInitial(cityName))}</div>
+        <div class="city-accent" style="${accentStyle}"></div>
+        <div class="city-badge" style="${badgeStyle}">${escapeHtml(cityInitial(cityName))}</div>
         <div class="city-body">
           <h3 class="city-name">${escapeHtml(cityName)}</h3>
           <p class="city-meta">${escapeHtml(city.province[state.lang])}</p>
@@ -687,18 +725,54 @@
     $('#cityMeta').textContent = `${regionLabel(city.region)} · ${city.province[state.lang]}`;
     const list = $('#centerList');
     list.innerHTML = '';
+    const p = paletteFor(city.id, 0);
     city.centers.forEach(center => {
-      const item = document.createElement('button');
+      const item = document.createElement('div');
       item.className = 'center-card';
+      item.setAttribute('role', 'button');
+      item.setAttribute('tabindex', '0');
+      const headerStyle = `background:${p.bg};border-color:${p.border}`;
+      const badgeStyle = `background:${p.accent};color:#fff`;
+      const iconStyle = `color:${p.text}`;
       item.innerHTML = `
-        <div class="center-icon">${escapeHtml(initials(center.name[state.lang]))}</div>
-        <div class="center-body">
-          <p class="center-name">${escapeHtml(center.name[state.lang])}</p>
-          <p class="center-sub">${escapeHtml(center.address)}</p>
+        <div class="center-header" style="${headerStyle}">
+          <div class="center-pin" style="${iconStyle}">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C12.95 21.5 20 15.4 20 10a8 8 0 0 0-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+          </div>
+          <div class="center-route-badge" style="${badgeStyle}">
+            <strong>${center.routes.length}</strong>
+            <span>${escapeHtml(t().routes.toLowerCase())}</span>
+          </div>
         </div>
-        <span class="center-arrow">›</span>
+        <div class="center-body">
+          <h3 class="center-name">${escapeHtml(center.name[state.lang])}</h3>
+          <p class="center-sub">
+            <svg class="row-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C12.95 21.5 20 15.4 20 10a8 8 0 0 0-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+            <span>${escapeHtml(center.address)}</span>
+          </p>
+          <div class="center-chips">
+            <span class="chip chip-operator">${escapeHtml(center.operator)}</span>
+            <a class="chip chip-phone" href="tel:${escapeHtml(center.phone.replace(/\s+/g,''))}" onclick="event.stopPropagation()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 15.5a12.5 12.5 0 0 1-3.93-.63 1 1 0 0 0-1 .25l-2.2 2.2a15 15 0 0 1-6.59-6.59l2.2-2.2a1 1 0 0 0 .25-1A12.5 12.5 0 0 1 8.5 4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1A17 17 0 0 0 20 21a1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1z"/></svg>
+              ${escapeHtml(center.phone)}
+            </a>
+          </div>
+        </div>
+        <div class="center-cta" style="color:${p.accent}">
+          <span>${escapeHtml(t().routes)}</span>
+          <span class="cta-arrow">›</span>
+        </div>
       `;
-      item.addEventListener('click', () => navigate('center', { cityId: city.id, centerId: center.id }));
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('a')) return; // let tel: link fire
+        navigate('center', { cityId: city.id, centerId: center.id });
+      });
+      item.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigate('center', { cityId: city.id, centerId: center.id });
+        }
+      });
       list.appendChild(item);
     });
     return true;
@@ -711,11 +785,6 @@
     if (!center) return false;
     $('#centerName').textContent = center.name[state.lang];
     $('#centerMeta').textContent = `${city.name[state.lang]} · ${regionLabel(city.region)}`;
-    $('#centerInfo').innerHTML = `
-      <div class="info-row"><span class="info-label">${escapeHtml(t().address)}</span><span class="info-value">${escapeHtml(center.address)}</span></div>
-      <div class="info-row"><span class="info-label">${escapeHtml(t().operator)}</span><span class="info-value">${escapeHtml(center.operator)}</span></div>
-      <div class="info-row"><span class="info-label">${escapeHtml(t().phone)}</span><span class="info-value"><a href="tel:${escapeHtml(center.phone.replace(/\s+/g,''))}" style="color:inherit;text-decoration:none">${escapeHtml(center.phone)}</a></span></div>
-    `;
     const list = $('#routeList');
     list.innerHTML = '';
     center.routes.forEach(route => {
@@ -730,7 +799,6 @@
         </div>
         <div class="route-body">
           <h3 class="route-focus">${escapeHtml(route.focus[state.lang])}</h3>
-          <p class="route-address">${escapeHtml(center.address)}</p>
           <div class="route-stats">
             <span class="route-stat"><strong>${route.durationMin}</strong> ${escapeHtml(t().duration)}</span>
             <span class="route-stat"><strong>${route.distanceKm}</strong> ${escapeHtml(t().distance)}</span>
@@ -785,6 +853,30 @@
       <path d="M-10,80 C50,30 120,110 180,60 C220,30 260,70 310,40" stroke="#d62828" stroke-width="1" fill="none" stroke-dasharray="4 6" opacity="0.7"/>
       <circle cx="20" cy="76" r="5" fill="#fff"/><circle cx="280" cy="44" r="5" fill="#d62828"/>
     </svg>`;
+  }
+
+  // City color palette — deterministic per city id so colors stay stable.
+  const CITY_PALETTES = [
+    { accent: '#fcbf1e', bg: '#fff3c4', text: '#5e4a00', border: '#f1d77b' }, // yellow
+    { accent: '#7cb342', bg: '#e6f4d6', text: '#2e4d10', border: '#bcdb95' }, // green
+    { accent: '#42a5f5', bg: '#d8ecfb', text: '#0d3a5e', border: '#9ec9eb' }, // sky
+    { accent: '#ef6c5e', bg: '#fde0dc', text: '#6b1d15', border: '#f0b5ad' }, // coral
+    { accent: '#ab7df0', bg: '#ece0fa', text: '#3a1f6b', border: '#c8b2ea' }, // lavender
+    { accent: '#26a69a', bg: '#d4f0ed', text: '#0d4540', border: '#9dd2cc' }, // teal
+    { accent: '#ec407a', bg: '#fbdce8', text: '#6b1a3a', border: '#eeb1c8' }, // pink
+    { accent: '#ff8a3d', bg: '#fde4cf', text: '#6b3010', border: '#f1be91' }, // orange
+    { accent: '#5c6bc0', bg: '#dde0f1', text: '#1f266b', border: '#a8b0db' }, // indigo
+    { accent: '#8d6e63', bg: '#e7ddd6', text: '#3e2a1f', border: '#bfa899' }, // brown
+    { accent: '#00838f', bg: '#cfe9ec', text: '#003c44', border: '#92c9d0' }, // dark cyan
+    { accent: '#c0ca33', bg: '#eef0c4', text: '#3e421a', border: '#d4d98c' }  // lime
+  ];
+  // Hard-pinned colors for specific cities — overrides the cycle.
+  const CITY_COLOR_PINS = {
+    gent: 5 // teal
+  };
+  function paletteFor(cityId, index) {
+    if (CITY_COLOR_PINS[cityId] != null) return CITY_PALETTES[CITY_COLOR_PINS[cityId]];
+    return CITY_PALETTES[index % CITY_PALETTES.length];
   }
 
   function cityInitial(name) {
@@ -863,6 +955,12 @@
 
     window.addEventListener('hashchange', onHashChange);
     window.addEventListener('popstate', onHashChange);
+
+    $('#aboutFab').addEventListener('click', openAbout);
+    $$('#aboutModal [data-close]').forEach(el => el.addEventListener('click', closeAbout));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !$('#aboutModal').hidden) closeAbout();
+    });
 
     // Initial route decision
     const parsed = parseHash();

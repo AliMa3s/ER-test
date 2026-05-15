@@ -117,7 +117,6 @@
         </div>
       </header>
       <main class="content">
-        <div class="center-info" id="centerInfo"></div>
         <div class="section-head">
           <h2 class="section-title" data-i18n="routes">Practice routes</h2>
         </div>
@@ -125,6 +124,41 @@
         <p class="disclaimer" data-i18n="disclaimerLong">Practice guidance only. These are suggested practice routes and not official exam routes. Always confirm details with the exam center.</p>
       </main>
     </section>
+  </div>
+
+  <!-- Floating About button -->
+  <button id="aboutFab" class="about-fab" aria-label="About" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"/></svg>
+  </button>
+
+  <!-- About modal -->
+  <div id="aboutModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+      <button class="modal-close" data-close aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></svg>
+      </button>
+      <div class="modal-header">
+        <div class="brand-flag" aria-hidden="true">
+          <span class="flag-black"></span>
+          <span class="flag-yellow"></span>
+          <span class="flag-red"></span>
+        </div>
+        <h2 id="aboutTitle" class="modal-title" data-i18n="aboutTitle">About ExamRoute</h2>
+        <p class="modal-version" data-i18n="aboutVersion">Version 1.0</p>
+      </div>
+      <div class="modal-body">
+        <p data-i18n="aboutText">ExamRoute helps Belgian learner drivers explore practice routes around official exam centers — across Flanders, Brussels and Wallonia.</p>
+        <p data-i18n="aboutDisclaimer" class="modal-note">Practice guidance only. These are suggested practice routes and not official exam routes. Always confirm details with the exam center.</p>
+      </div>
+      <div class="modal-actions">
+        <a id="support-link" class="support-btn" href="https://www.paypal.com/paypalme/alimaes" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 11c0 5.65-7 10-7 10z"/></svg>
+          <span data-i18n="aboutSupport">Support this project</span>
+        </a>
+        <button class="modal-dismiss" data-close data-i18n="aboutClose">Close</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
