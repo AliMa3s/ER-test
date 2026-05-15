@@ -415,7 +415,7 @@
     'gent-sdw': {
       city: 'Gent',
       A: {
-        path: ['Poortakkerstraat', 'Klenkouterken', 'Steenaardestraat', 'Beukenlaan', 'Stormvogelstraat', 'B402', 'Poortakkerstraat'],
+        path: ['Poortakkerstraat', 'Kleinkouterken', 'Steenaardestraat', 'Beukenlaan', 'Stormvogelstraat', 'B402', 'Poortakkerstraat'],
         distanceKm: 11, durationMin: 22,
         imageUrl: 'assets/GentrouteA.png'
       },
@@ -564,20 +564,33 @@
   };
 
   function buildRouteUrl(route, center, cityName) {
-    const stops = [];
+    // Use the documented ?api=1 format. The Android Google Maps app
+    // parses origin/destination/waypoints from this format natively;
+    // the /maps/dir/A/B/C/... path style only renders 2 stops in the
+    // mobile Maps app.
+    const places = (route.path && route.path.length >= 2)
+      ? route.path.map(p => p + ', ' + cityName)
+      : [center.address];
+
+    let origin, destination, waypoints;
     if (state.userLocation) {
-      stops.push(state.userLocation.lat.toFixed(6) + ',' + state.userLocation.lng.toFixed(6));
-    }
-    if (route.path && route.path.length >= 2) {
-      route.path.forEach(p => stops.push(p + ', ' + cityName));
+      origin = state.userLocation.lat.toFixed(6) + ',' + state.userLocation.lng.toFixed(6);
+      destination = places[places.length - 1];
+      waypoints = places.slice(0, -1);
     } else {
-      stops.push(center.address);
+      origin = places[0];
+      destination = places[places.length - 1];
+      waypoints = places.slice(1, -1);
     }
-    if (stops.length < 2) {
-      return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(stops[0] || center.address);
+
+    let url = 'https://www.google.com/maps/dir/?api=1';
+    url += '&origin=' + encodeURIComponent(origin);
+    url += '&destination=' + encodeURIComponent(destination);
+    if (waypoints.length > 0) {
+      url += '&waypoints=' + waypoints.map(encodeURIComponent).join('%7C');
     }
-    const segments = stops.map(s => encodeURIComponent(s).replace(/%20/g, '+'));
-    return 'https://www.google.com/maps/dir/' + segments.join('/');
+    url += '&travelmode=driving';
+    return url;
   }
 
   function requestLocation() {
