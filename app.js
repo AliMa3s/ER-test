@@ -26,7 +26,13 @@
       aboutText: 'ExamRoute helpt Belgische leerling-bestuurders bij het verkennen van oefenroutes rond officiële examencentra in Vlaanderen, Brussel en Wallonië.',
       aboutDisclaimer: 'Enkel ter oefening. Dit zijn voorgestelde oefenroutes, geen officiële examenroutes. Bevestig altijd de details bij het examencentrum.',
       aboutSupport: 'Steun dit project',
-      aboutClose: 'Sluiten'
+      aboutClose: 'Sluiten',
+      useMyLocation: 'Vertrek vanaf mijn locatie',
+      locationHint: 'Toon de route vanaf waar je bent',
+      locationLoading: 'Locatie ophalen…',
+      locationActive: 'Huidige locatie wordt gebruikt',
+      locationDenied: 'Locatietoegang geweigerd',
+      locationUnsupported: 'Locatie niet beschikbaar'
     },
     en: {
       chooseLanguage: 'Choose your language',
@@ -48,7 +54,13 @@
       aboutText: 'ExamRoute helps Belgian learner drivers explore practice routes around official exam centers — across Flanders, Brussels and Wallonia.',
       aboutDisclaimer: 'Practice guidance only. These are suggested practice routes and not official exam routes. Always confirm details with the exam center.',
       aboutSupport: 'Support this project',
-      aboutClose: 'Close'
+      aboutClose: 'Close',
+      useMyLocation: 'Start from my location',
+      locationHint: 'Show directions from where you are',
+      locationLoading: 'Getting location…',
+      locationActive: 'Using current location',
+      locationDenied: 'Location access denied',
+      locationUnsupported: 'Location unavailable'
     },
     fr: {
       chooseLanguage: 'Choisissez votre langue',
@@ -70,7 +82,13 @@
       aboutText: 'ExamRoute aide les apprentis conducteurs belges à explorer des itinéraires de pratique autour des centres d\'examen officiels — en Flandre, à Bruxelles et en Wallonie.',
       aboutDisclaimer: 'À titre indicatif uniquement. Ce sont des itinéraires de pratique suggérés et non des itinéraires officiels. Confirmez toujours les détails avec le centre d\'examen.',
       aboutSupport: 'Soutenir ce projet',
-      aboutClose: 'Fermer'
+      aboutClose: 'Fermer',
+      useMyLocation: 'Partir depuis ma position',
+      locationHint: 'Itinéraire depuis votre position',
+      locationLoading: 'Localisation en cours…',
+      locationActive: 'Position actuelle utilisée',
+      locationDenied: 'Accès à la localisation refusé',
+      locationUnsupported: 'Localisation indisponible'
     }
   };
 
@@ -539,8 +557,90 @@
     query: '',
     screen: 'language',
     selectedCityId: null,
-    selectedCenterId: null
+    selectedCenterId: null,
+    useLocation: false,
+    userLocation: null,
+    locationStatus: 'idle' // idle | loading | granted | denied | unsupported
   };
+
+  function buildRouteUrl(route, center, cityName) {
+    const stops = [];
+    if (state.userLocation) {
+      stops.push(state.userLocation.lat.toFixed(6) + ',' + state.userLocation.lng.toFixed(6));
+    }
+    if (route.path && route.path.length >= 2) {
+      route.path.forEach(p => stops.push(p + ', ' + cityName));
+    } else {
+      stops.push(center.address);
+    }
+    if (stops.length < 2) {
+      return 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(stops[0] || center.address);
+    }
+    const segments = stops.map(s => encodeURIComponent(s).replace(/%20/g, '+'));
+    return 'https://www.google.com/maps/dir/' + segments.join('/');
+  }
+
+  function requestLocation() {
+    if (!navigator.geolocation) {
+      state.locationStatus = 'unsupported';
+      state.useLocation = false;
+      const tgl = $('#useLocationToggle');
+      if (tgl) tgl.checked = false;
+      updateLocationUI();
+      return;
+    }
+    state.locationStatus = 'loading';
+    updateLocationUI();
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        state.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        state.locationStatus = 'granted';
+        updateLocationUI();
+        refreshRouteUrls();
+      },
+      () => {
+        state.userLocation = null;
+        state.locationStatus = 'denied';
+        state.useLocation = false;
+        const tgl = $('#useLocationToggle');
+        if (tgl) tgl.checked = false;
+        updateLocationUI();
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+
+  function updateLocationUI() {
+    const el = $('#locStatus');
+    if (!el) return;
+    const map = {
+      loading: 'locationLoading',
+      granted: 'locationActive',
+      denied: 'locationDenied',
+      unsupported: 'locationUnsupported',
+      idle: 'locationHint'
+    };
+    const key = map[state.locationStatus] || 'locationHint';
+    el.setAttribute('data-i18n', key);
+    el.textContent = t()[key];
+    el.classList.toggle('loc-status-active', state.locationStatus === 'granted');
+    el.classList.toggle('loc-status-error', state.locationStatus === 'denied' || state.locationStatus === 'unsupported');
+  }
+
+  function refreshRouteUrls() {
+    if (state.screen !== 'center') return;
+    const city = CITIES.find(c => c.id === state.selectedCityId);
+    if (!city) return;
+    const center = city.centers.find(c => c.id === state.selectedCenterId);
+    if (!center) return;
+    const cards = $$('.route-card');
+    cards.forEach((card, idx) => {
+      const route = center.routes[idx];
+      if (!route) return;
+      const btn = card.querySelector('.maps-btn');
+      if (btn) btn.setAttribute('href', buildRouteUrl(route, center, city.name.nl));
+    });
+  }
 
   // ===================== DOM helpers =====================
   const $ = (sel) => document.querySelector(sel);
@@ -785,6 +885,9 @@
     if (!center) return false;
     $('#centerName').textContent = center.name[state.lang];
     $('#centerMeta').textContent = `${city.name[state.lang]} · ${regionLabel(city.region)}`;
+    const tgl = $('#useLocationToggle');
+    if (tgl) tgl.checked = state.useLocation && state.locationStatus === 'granted';
+    updateLocationUI();
     const list = $('#routeList');
     list.innerHTML = '';
     center.routes.forEach(route => {
@@ -810,7 +913,7 @@
           <div class="route-notes">
             <ul>${route.notes.map(n => `<li>${escapeHtml(n[state.lang])}</li>`).join('')}</ul>
           </div>
-          <a class="maps-btn" href="${route.googleMapsUrl}" target="_blank" rel="noopener noreferrer">
+          <a class="maps-btn" href="${buildRouteUrl(route, center, city.name.nl)}" target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a8 8 0 0 0-8 8c0 5.4 7.05 11.5 7.35 11.76a1 1 0 0 0 1.3 0C12.95 21.5 20 15.4 20 10a8 8 0 0 0-8-8zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
             ${escapeHtml(t().openMaps)}
           </a>
@@ -955,6 +1058,18 @@
 
     window.addEventListener('hashchange', onHashChange);
     window.addEventListener('popstate', onHashChange);
+
+    $('#useLocationToggle').addEventListener('change', (e) => {
+      state.useLocation = e.target.checked;
+      if (state.useLocation) {
+        requestLocation();
+      } else {
+        state.userLocation = null;
+        state.locationStatus = 'idle';
+        updateLocationUI();
+        refreshRouteUrls();
+      }
+    });
 
     $('#aboutFab').addEventListener('click', openAbout);
     $$('#aboutModal [data-close]').forEach(el => el.addEventListener('click', closeAbout));
