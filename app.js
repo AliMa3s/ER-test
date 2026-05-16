@@ -37,8 +37,8 @@
       highwayText: 'Als Google Maps je op een snelweg of grote gewestweg stuurt, neem dan de eerste afrit en vervolg de oefenroute. Anders kan Maps je te lang op die weg laten rijden.',
       highwayContinue: 'Doorgaan naar Google Maps',
       highwayCancel: 'Annuleren',
-      waypointCount: (n) => `${n} waypoint${n === 1 ? '' : 's'}`,
-      mapsPart: (n, total) => `Deel ${n}/${total}`
+      waypointCount: (n) => `Deze route heeft ${n} wegpunt${n === 1 ? '' : 'en'}`,
+      mapsPart: (n, total) => `Deel ${n} van ${total}`
     },
     en: {
       chooseLanguage: 'Choose your language',
@@ -71,8 +71,8 @@
       highwayText: 'If Google Maps sends you onto a highway or major road, take the first exit and continue the practice route. Maps can otherwise keep you on the road too long.',
       highwayContinue: 'Continue to Google Maps',
       highwayCancel: 'Cancel',
-      waypointCount: (n) => `${n} waypoint${n === 1 ? '' : 's'}`,
-      mapsPart: (n, total) => `Part ${n}/${total}`
+      waypointCount: (n) => `This route has ${n} waypoint${n === 1 ? '' : 's'}`,
+      mapsPart: (n, total) => `Part ${n} of ${total}`
     },
     fr: {
       chooseLanguage: 'Choisissez votre langue',
@@ -105,8 +105,8 @@
       highwayText: 'Si Google Maps vous envoie sur une autoroute ou une grande route, prenez la première sortie puis continuez l\'itinéraire de pratique. Sinon, Maps peut vous faire rester trop longtemps sur cette route.',
       highwayContinue: 'Continuer vers Google Maps',
       highwayCancel: 'Annuler',
-      waypointCount: (n) => `${n} point${n === 1 ? '' : 's'} de passage`,
-      mapsPart: (n, total) => `Partie ${n}/${total}`
+      waypointCount: (n) => `Cette route a ${n} point${n === 1 ? '' : 's'} de passage`,
+      mapsPart: (n, total) => `Partie ${n} sur ${total}`
     }
   };
 
