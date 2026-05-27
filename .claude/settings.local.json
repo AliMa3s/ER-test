@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(sed -i '115,556d' app.js)",
-      "Bash(sed -n '110,120p' app.js)"
+      "Bash(sed -n '110,120p' app.js)",
+      "Bash(curl -sIL \"https://sites.google.com/view/examroutebelgium/home\")"
     ]
   }
 }
